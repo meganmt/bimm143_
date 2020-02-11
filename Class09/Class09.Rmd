@@ -1,0 +1,188 @@
+---
+title: "Class09"
+author: "Megan Truong"
+date: "2/4/2020"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## K- means clustering
+
+the main l-means function inR is called kmeans()
+rev: reverses order of function
+
+```{r}
+# Generate some example data for clustering
+tmp <- c(rnorm(30,-3), rnorm(30,3))
+x <- cbind(x=tmp, y=rev(tmp))
+plot(x)
+
+```
+
+Use the kmeans() function setting k to 2 and nstart=20
+Inspect/print the results
+Q. How many points are in each cluster?
+Q. What ‘component’ of your result object details
+ - cluster size?
+ - cluster assignment/membership?
+ - cluster center?
+Plot x colored by the kmeans cluster assignment and
+ add cluster centers as blue points
+ 
+```{r}
+km <- kmeans(x, centers = 2, nstart = 20)
+km
+
+# Cluster size
+km$size
+# Cluster
+km$cluster
+#cluster center
+length(km$cluster)
+table(km$cluster)
+
+```
+ 
+```{r}
+plot(x, col=km$cluster)
+points(km$centers, col = "blue", pch = 15, cex =3)
+```
+ 
+ 
+ 
+ ## Hierarchial clustering in R
+ 
+ The main Hierarchical clustering function in R is called hclust() 
+    Important: have to calculate the distance matrix deom of input data     before calling hclus()
+  
+```{r}
+# First we need to calculate point (dis)similarity
+# as the Euclidean distance between observations
+dist_matrix <- dist(x)
+# The hclust() function returns a hierarchical
+# clustering model
+hc <- hclust(d = dist_matrix)
+# the print method is not so useful here
+hc 
+```
+```{r}
+plot(hc)
+abline(h=6, col ="red", lty =2)
+abline(h=4, col="blue")
+```
+
+To get cluster membership- vector need to cut the tree at a certian height to yield separate cluster branches
+```{r}
+cutree(hc, h=6)
+```
+
+```{r}
+gp4 <- cutree(hc, h=4)
+table(gp4)
+```
+
+
+## More
+
+```{r}
+# Step 1. Generate some example data for clustering
+x <- rbind(
+ matrix(rnorm(100, mean=0, sd = 0.3), ncol = 2), # c1
+ matrix(rnorm(100, mean = 1, sd = 0.3), ncol = 2), # c2
+ matrix(c(rnorm(50, mean = 1, sd = 0.3), # c3
+ rnorm(50, mean = 0, sd = 0.3)), ncol = 2))
+colnames(x) <- c("x", "y")
+# Step 2. Plot the data without clustering
+plot(x)
+# Step 3. Generate colors for known clusters
+# (just so we can compare to hclust results)
+col <- as.factor( rep(c("c1","c2","c3"), each=50) )
+plot(x, col=col)
+```
+ Boundaries of clusters are not always clear...need to cut
+```{r}
+hc <- hclust(dist(x))
+hc
+```
+
+```{r}
+plot(hc)
+abline(h=1.7, col = "red")
+```
+Cut Tree
+```{r}
+grps <- cutree(hc, k =3)
+grps
+table(grps)
+plot(x, col = grps)
+```
+
+## PCS of Uk food data
+
+```{r}
+x <- read.csv("UK_foods.csv", row.names = 1)
+x
+```
+
+```{r}
+# number of rows and columns
+nrow(x)
+ncol(x)
+```
+
+Making plots to explore the data
+
+```{r}
+barplot(as.matrix(x), beside=T, col=rainbow(nrow(x)))
+```
+
+
+```{r}
+barplot(as.matrix(x), beside=F, col=rainbow(nrow(x)))
+```
+
+
+A "pairs" plot can be helpful when we have small datasets like this one but  often we  are dealing with  data that is too large for this approach
+
+```{r}
+pairs(x, col=rainbow(10), pch=16)
+```
+
+```{r}
+pca <- prcomp( t(x) )
+summary(pca)
+```
+
+```{r}
+attributes(pca)
+```
+
+
+```{r}
+plot(pca$x[,1], pca$x[,2])
+```
+
+
+```{r}
+summary(pca)
+```
+
+
+
+
+
+```{r}
+plot(pca$x[,1], pca$x[,2], xlab="PC1", ylab="PC2", xlim=c(-270,500))
+text(pca$x[,1], pca$x[,2], colnames(x),
+     col=c("black", "red", "blue", "green"))
+```
+
+```{r}
+## Lets focus on PC1 as it accounts for > 90% of variance 
+par(mar=c(10, 3, 0.35, 0))
+barplot( pca$rotation[,1], las=2 )
+```
+
