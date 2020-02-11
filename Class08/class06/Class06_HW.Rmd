@@ -1,0 +1,73 @@
+---
+title: "Class06_HW"
+author: "Megan Truong"
+date: "1/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Q6. How would you generalize the original code above to work with any set of input protein structures?
+
+
+## Install Package 
+In the console, install the package for bio3d using 'instal.packages("bio3d") as a one time thing.
+
+```{r}
+library(bio3d)
+```
+
+
+## Analyzing Proteins
+
+```{r}
+
+# Call to the file
+library("bio3d")
+
+# Defining the function, where x = any protein
+analyze_protein <- function(x) {
+
+  # Define a variable and run read.pdb() to get a table from the protein data bank.
+  s1 <- read.pdb(x) # where x is the protien being analyzed
+
+  # Then trim the PDB file into a smaller one, containing a subset of atoms using   trim.pdb()
+  s1.chainA <- trim.pdb(s1, chain="A", elety="CA")
+
+  # Simplify it
+  s1.b <- s1.chainA$atom$b
+
+  # Call to plot with type of plot, x and y labels, and colors for secondary structures
+  plotb3(s1.b, sse=s1.chainA, typ="l", ylab="Bfactor", helix.col = "pink", sheet.col = "lightblue")
+  
+}
+
+
+```
+
+
+## Testing the Function
+Define the protein name/code as x and call to the function for each individual protein
+```{r}
+x <- c("4AKE")
+
+analyze_protein(x)
+
+```
+
+```{r}
+x <- c("1AKE")
+
+analyze_protein(x)
+
+```
+
+```{r}
+x <- c("1E4Y")
+
+analyze_protein(x)
+
+```
+
