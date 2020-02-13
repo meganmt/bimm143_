@@ -43,7 +43,44 @@ protein
 
 > Q2: Type HIV in the PDB website search box on the home page and determine how many HIV-1 protease structures are in the current PDB?
 
+3105
 
 
+# Part 2
 
+Read a single PDB structure into R
+```{r}
+library("bio3d")
+
+pdb <- read.pdb("1hsg")
+pdb
+```
+
+## Select Protein Only 
+
+here we will use the atom.select() function 
+
+```{r}
+attributes(pdb)
+```
+
+```{r}
+pdb$atom
+
+```
+
+atom.select(pdb, other arguments)
+
+```{r}
+prot <- atom.select(pdb, "protein", value = TRUE)
+lig <- atom.select(pdb, "ligand", value = TRUE)
+
+```
+
+Write out these with write.pdb()
+
+```{r}
+write.pdb(lig, file ="ligand")
+write.pdb(prot, file = "protein")
+```
 
