@@ -51,9 +51,13 @@ lig
 ```
 
 
->Q1: What is the name of the two non protein resid values in this structure? What does resid
-correspond to and how would you get a listing of all reside values in this structure? 
+## In AutoDock Tools
 
+File > Read Molecule > 1hsg protein
+
+Delete Waters
+
+Add Hydrogens by: Edit > Hydrogens > Add
 
 
 
