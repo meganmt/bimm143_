@@ -1,0 +1,69 @@
+---
+title: "Class13"
+author: "Megan Truong"
+date: "2/18/2020"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Hands on Section
+
+## Dowlaod and clean HIV-Pr receptor structure 
+
+Here we downloaded the 1HSG PDB structure from the online database, remove the bound drug from the Merk and write out a porotien only and ligand only new set of PDB files 
+
+You can copy and paste and use it on any protien just change the name!!
+
+Just use bio2d **package functions**: get.pdb(), read.pdb(), atom.select() and write.pdb().
+
+```{r}
+library(bio3d)
+
+# Download PDB file: where 1hsg is any sturcture/protein you want to search
+file.name <- get.pdb("1hsg.pdb")
+
+pdb <- read.pdb(file.name)
+
+pdb
+```
+
+Select protein only
+```{r}
+prot <- atom.select(pdb, "protein", value = TRUE)
+
+write.pdb(prot, file = "prot") 
+
+prot
+```
+
+
+Select and write out ligand only
+```{r}
+lig <- atom.select(pdb, "ligand", value = TRUE)
+
+write.pdb(lig, file = "lig")
+
+lig
+
+```
+
+
+>Q1: What is the name of the two non protein resid values in this structure? What does resid
+correspond to and how would you get a listing of all reside values in this structure? 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
