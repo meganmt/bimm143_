@@ -1,0 +1,218 @@
+---
+title: "Transcriptomics and the analysis of RNA-Seq data"
+author: "Megan Truong"
+date: "2/20/2020"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The data for this hands-on session comes from a published RNA-seq experiment where airway smooth muscle cells were treated with dexamethasone, a synthetic glucocorticoid steroid with anti-inflammatory effects (Himes et al. 2014).
+
+Glucocorticoids are used, for example, by people with asthma to reduce inflammation of the airways. The anti-inflammatory effects on airway smooth muscle (ASM) cells has been known for some time but the underlying molecular mechanisms are unclear.
+
+
+```{r}
+counts <- read.csv("airway_scaledcounts.csv", stringsAsFactors = FALSE)
+metadata <-  read.csv("airway_metadata.csv", stringsAsFactors = FALSE)
+```
+
+
+How many genes are we delaing with?
+
+```{r}
+nrow(counts)
+```
+
+To calculate the average counts per gene for control sampless and then for drug treated ones. Then compare to see if there is a difference between control and treated samples for a given gene.
+
+
+This is metadata info that tells where our control and treated samples are 
+```{r}
+metadata
+```
+
+
+The "dex" column tells us which is control or treated
+```{r}
+metadata$dex
+```
+
+
+To see which are control, will tell you true or false
+```{r}
+metadata$dex == "control"
+```
+
+
+To see which of them is a control by id use []. If you want to access control only rows in metadata
+```{r}
+control <- metadata[metadata$dex == "control", ]
+#metadata$id[metadata$dex == "control"]
+
+counts[ , control$id]
+
+```
+
+
+Now use $id of control data to access control columns in counts and calculate the average
+```{r}
+control.mean <- rowSums(counts[ , control$id]) / 4
+# divide by four bc there are 4 control samples or divide by nrow(control)
+
+names(control.mean) <- counts$ensgene
+# put the names of the genes back on
+
+
+control.mean
+```
+
+
+Now do the treated ones
+```{r}
+treated <- metadata[metadata$dex == "treated", ]
+
+counts[ , treated$id]
+```
+
+```{r}
+treated.mean <- rowSums(counts[ , treated$id]) / nrow(treated)
+
+treated.mean
+```
+
+
+
+For bookkeeping purposes let's combine the meancount data:
+
+```{r}
+meancounts <- data.frame(control.mean, treated.mean)
+head(meancounts)
+```
+
+
+
+Let's plot
+
+```{r}
+plot(meancounts)
+```
+
+
+Let's make this plot log-log plot
+```{r}
+plot(log2(meancounts))
+```
+
+We can find candidate differentially expressed genes by looking for genes with a large change between control and dex-treated samples. We usually look at the log2 of the fold change, because this has better mathematical properties.
+
+Here we calculate log2foldchange, add it to our meancounts data.frame and inspect the results either with the head() or the View() function for example.
+
+```{r}
+meancounts$log2fc <- log2(meancounts[,"treated.mean"]/meancounts[,"control.mean"])
+head(meancounts)
+
+```
+
+
+
+Remove any gene that has zero average counts
+
+```{r}
+x <- data.frame(c(1,1,10,0), c(0,1,10,0))
+x
+x == 0
+which(x == 0, arr.ind = TRUE)[, "row"]
+```
+
+
+
+```{r}
+zero.vals <- which(meancounts[,1:2]==0, arr.ind=TRUE)
+
+to.rm <- unique(zero.vals[,1])
+mycounts <- meancounts[-to.rm,]
+head(mycounts)
+```
+
+How many genes left?
+```{r}
+nrow(mycounts)
+```
+
+
+A common threshold used for calling something differentially expressed is a log2(FoldChange) of greater than 2 or less than -2. Let’s filter the dataset both ways to see how many genes are up or down-regulated.
+```{r}
+up.ind <- mycounts$log2fc > 2
+down.ind <- mycounts$log2fc < (-2)
+```
+
+
+How many upregulated genes at this threshold
+```{r}
+sum(up.ind)
+```
+
+How many downregulated genes at this threshold?
+```{r}
+sum(down.ind)
+```
+
+
+## DESeq2
+
+```{r}
+library(DESeq2)
+```
+
+Setup input for DESeq by specifiying countdata, metadata, and the experiment design (i.e which comparison we are interested in)
+```{r}
+dds <- DESeqDataSetFromMatrix(countData=counts, 
+                              colData=metadata, 
+                              design=~dex, 
+                              tidy=TRUE)
+dds
+```
+
+
+```{r}
+dds <- DESeq(dds)
+```
+
+```{r}
+res <- results(dds)
+```
+
+```{r}
+plot(res$log2FoldChange, res$padj)
+```
+
+
+```{r}
+plot(res$log2FoldChange, log(res$padj))
+```
+
+
+
+```{r}
+plot(res$log2FoldChange, -log(res$padj))
+```
+
+```{r}
+# Setup our custom point color vector 
+mycols <- rep("gray", nrow(res))
+mycols[ abs(res$log2FoldChange) > 2 ]  <- "red" 
+
+inds <- (res$padj < 0.01) & (abs(res$log2FoldChange) > 2 )
+mycols[ inds ] <- "blue"
+
+#Volcano plot with custom colors 
+plot( res$log2FoldChange,  -log(res$padj), 
+ col=mycols, ylab="-Log(P-value)", xlab="Log2(FoldChange)" )
+
+abline(v=c(-2,2), col="gray", lty=2)
+abline(h=-log(0.1), col="gray", lty=2)
+```
+
